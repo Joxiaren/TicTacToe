@@ -13,19 +13,60 @@ struct coordinates
 };
 
 struct coordinates easyAlgorithm(int ttt[3][3], int currentPlayer);
-struct coordinates hardAlgorithm(int ttt[3][3], int currentPlayer);
+struct coordinates hardAlgorithm(int ttt[3][3], int currentPlayer, struct coordinates previousCMove, struct coordinates prevoiusHMove);
+struct coordinates playerChoice(int ttt[3][3], int currentPlayer);
+struct coordinates winSpot(int ttt[3][3], struct coordinates previousMove, int currentPlayer);
+void showTable(int ttt[3][3]);
+void startGame(int select);
+int winCondition(int ttt[3][3], struct coordinates c, int currentPlayer);
+
+int main()
+{
+    srand(time(0));
+    printf("Welcome to TicTacToe made by JovanS\n\n");
+    while(1)
+    {
+        printf("Select an option:\n");
+        printf("1.Play with a human\n");
+        printf("2.Play with a machine\n");
+        printf("3.Exit\n");
+
+        int select;
+        scanf("%d", &select);
+        if(select == 1 || select == 2)
+        {
+            startGame(select);
+        }
+        else if(select == 3)
+        {
+            printf("Goodbye\n");
+            return 0;
+        }
+        else
+        {
+            printf("You are stupid try again");
+        }
+    }
+    return 0;
+}
 
 void showTable(int ttt[3][3])
 {
+    printf("=============\n");
     for(int j = 0; j < 3; j++)
     {
+        printf("| ");
         for(int jj = 0; jj < 3; jj++)
         {
-            printf("%d", ttt[j][jj]);
-            printf(" ");
+            if(ttt[j][jj] == 1) printf("x");
+            else if(ttt[j][jj] == 2) printf("o");
+            else printf(" ");
+
+            printf(" | ");
         }
         printf("\n");
     }
+    printf("=============\n");
 }
 int winCondition(int ttt[3][3], struct coordinates c, int currentPlayer)
 {
@@ -48,12 +89,50 @@ int winCondition(int ttt[3][3], struct coordinates c, int currentPlayer)
         winner = currentPlayer;
     return winner;
 }
+struct coordinates winSpot(int ttt[3][3], struct coordinates previousMove, int currentPlayer)
+{
+    struct coordinates winningCoordinates;
+    winningCoordinates.x = -1;
+    winningCoordinates.y = -1;
+
+    struct coordinates V,H,MD,SD;
+    short int winV = 0;
+    short int winH = 0;
+    short int winMD = 0;
+    short int winSD = 0;
+
+    for(int j = 0; j < 3; j++)
+    {
+        if(ttt[j][previousMove.x] == currentPlayer) winV++;
+        else if(ttt[j][previousMove.x] == 0) {V.x = previousMove.x; V.y = j; }
+        else winV = -1;
+        
+        if(ttt[previousMove.y][j] == currentPlayer) winH++;
+        else if(ttt[previousMove.y][j] == 0) {H.x = j; H.y = previousMove.y; }
+        else winH = -1;
+
+        if(ttt[j][j] == currentPlayer) winMD++;
+        else if(ttt[j][j] == 0) {MD.x = j; MD.y = j; }
+        else winMD = -1;
+
+        if(ttt[j][previousMove.x] == currentPlayer) winSD++;
+        else if(ttt[j][2-j] == 0) {SD.x = j; SD.y = 2-j; }
+        else winSD = -1;
+    }
+    if(winV == 2) winningCoordinates = V;
+    else if(winH == 2) winningCoordinates = H;
+    else if(winMD == 2) winningCoordinates = MD;
+    else if(winSD == 2) winningCoordinates = SD;
+
+    return winningCoordinates;
+}
 struct coordinates playerChoice(int ttt[3][3], int currentPlayer)
 {
     struct coordinates c;
     while(1)
     {
         int selectField;
+        printf("Your Choice: ");
         scanf("%d", &selectField);
         selectField--;
 
@@ -72,9 +151,10 @@ struct coordinates playerChoice(int ttt[3][3], int currentPlayer)
     return c;
 
 }
-struct coordinates hardAlgorithm(int ttt[3][3], int currentPLayer)
+struct coordinates hardAlgorithm(int ttt[3][3], int currentPLayer, struct coordinates previousCMove, struct coordinates previousHMove)
 {
     struct coordinates c;
+
     bool played = false;
     c.x = -1;
     c.y = -1;
@@ -85,39 +165,35 @@ struct coordinates hardAlgorithm(int ttt[3][3], int currentPLayer)
     }
     else
     {
+        //play the winning move
         if(!played)
         {
-            for(int j = 0; j < 3; j++)
-            {
-                for(int jj = 0; jj < 3; jj++)
-                {
-                    if(ttt[j][jj] == 0)
-                    {
-                        int hor = 0;
-                        int ver = 0;
-                        int mdi = 0;
-                        int sdi = 0;
-                        if(j != jj) mdi = -1;
-                        if(j+jj != 2) sdi = -1;
-
-                        for(int jjj = 0; jjj < 3; jjj++)
-                        {
-                            if(hor != -1)
-                            {
-                                
-                            }
-                        }
-                    }
-                }
-            }
+            c = winSpot(ttt, previousCMove, currentPLayer);
+            if(c.x != -1) played = true;
         }
+        //block player from playing the winning move
         if(!played)
         {
-
+            if(currentPLayer == 1) currentPLayer = 2;
+            else currentPLayer = 1;
+            
+            c = winSpot(ttt, previousHMove, currentPLayer);
+            if(c.x != -1) played = true;
+            
+            if(currentPLayer == 1) currentPLayer = 2;
+            else currentPLayer = 1;
+        }
+        //dont play corner if player has 2 opposite corners
+        //dont play side when player has center
+        
+        //irrelevant cases
+        if(!played)
+        {
+            c = easyAlgorithm(ttt, currentPLayer);
         }
 
     }
-    if(c.x == -1  && c.y == -1) c = easyAlgorithm(ttt,currentPLayer);
+    ttt[c.y][c.x] = currentPLayer;
     return c;
 }
 struct coordinates easyAlgorithm(int ttt[3][3], int currentPlayer)
@@ -125,7 +201,7 @@ struct coordinates easyAlgorithm(int ttt[3][3], int currentPlayer)
     int k = 0;
     int freeSpace[9];
     for(int j = 0; j < 9; j++) freeSpace[j] = 0;
-    printf("\nFree spaces:");
+    
     for(int j = 0; j < 3; j++)
     {
         for(int jj = 0; jj < 3; jj++)
@@ -134,13 +210,11 @@ struct coordinates easyAlgorithm(int ttt[3][3], int currentPlayer)
             {
                 freeSpace[k] = j * 3 + jj;
                 k++;
-                printf(" %d", freeSpace[k-1]);
+                
             }
         }
-    }
-    printf("\n");
+    }  
     int choice = freeSpace[rand()%k];
-    printf("Computer choose: %d\n", choice);
     struct coordinates c;
     c.x = choice%3;
     c.y = choice/3;
@@ -198,6 +272,9 @@ void startGame(int select)
     {
         int computer = 1;
         int difficulty = 1;
+        struct coordinates previousCMove; previousCMove.x = 0; previousCMove.y = 0;
+        struct coordinates previousHMove; previousHMove.x = 0; previousHMove.y = 0;
+
         while(1)
         {
             printf("Who goes first?\n1.Computer\n2.Human\n");
@@ -230,12 +307,15 @@ void startGame(int select)
             if(currentPlayer == computer)
             {
                if(difficulty == 1) c =  easyAlgorithm(ttt, currentPlayer);
-               else c = hardAlgorithm(ttt, currentPlayer);
+               else c = hardAlgorithm(ttt, currentPlayer, previousCMove, previousHMove);
+               printf("Computer choose: x = %d, y = %d\n", c.x, c.y);
+               previousCMove = c;
                showTable(ttt);
             }
             else
             {
                 c = playerChoice(ttt, currentPlayer);
+                previousHMove = c;
             }
             winner = winCondition(ttt,c,currentPlayer);
 
@@ -263,32 +343,4 @@ void startGame(int select)
         }
     }
 }
-int main()
-{
-    srand(time(0));
-    printf("Welcome to TicTacToe made by JovanS\n\n");
-    while(1)
-    {
-        printf("Select an option:\n");
-        printf("1.Play with a human\n");
-        printf("2.Play with a machine\n");
-        printf("3.Exit\n");
 
-        int select;
-        scanf("%d", &select);
-        if(select == 1 || select == 2)
-        {
-            startGame(select);
-        }
-        else if(select == 3)
-        {
-            printf("Goodbye\n");
-            return 0;
-        }
-        else
-        {
-            printf("You are stupid try again");
-        }
-    }
-    return 0;
-}
