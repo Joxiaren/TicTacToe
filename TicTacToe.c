@@ -53,10 +53,11 @@ int main()
 void showTable(int ttt[3][3])
 {
     printf("=============\n");
-    for(int j = 0; j < 3; j++)
+    int j, jj;
+    for(j = 0; j < 3; j++)
     {
         printf("| ");
-        for(int jj = 0; jj < 3; jj++)
+        for(jj = 0; jj < 3; jj++)
         {
             if(ttt[j][jj] == 1) printf("x");
             else if(ttt[j][jj] == 2) printf("o");
@@ -71,6 +72,7 @@ void showTable(int ttt[3][3])
 int winCondition(int ttt[3][3], struct coordinates c, int currentPlayer)
 {
     int winner = 0;
+    int j;
     bool winV = true;
     bool winH = true;
     bool winMD = false;
@@ -78,7 +80,7 @@ int winCondition(int ttt[3][3], struct coordinates c, int currentPlayer)
 
     if(c.y == c.x) winMD = true;
     if(c.y + c.x == 2) winSD = true;
-    for(int j = 0; j < 3; j++)
+    for(j = 0; j < 3; j++)
     {
         if(winV && ttt[j][c.x] != currentPlayer) winV = false;
         if(winH && ttt[c.y][j] != currentPlayer) winH = false;
@@ -101,7 +103,8 @@ struct coordinates winSpot(int ttt[3][3], struct coordinates previousMove, int c
     short int winMD = 0;
     short int winSD = 0;
 
-    for(int j = 0; j < 3; j++)
+    int j;
+    for(j = 0; j < 3; j++)
     {
         if(ttt[j][previousMove.x] == currentPlayer) winV++;
         else if(ttt[j][previousMove.x] == 0) {V.x = previousMove.x; V.y = j; }
@@ -198,13 +201,13 @@ struct coordinates hardAlgorithm(int ttt[3][3], int currentPLayer, struct coordi
 }
 struct coordinates easyAlgorithm(int ttt[3][3], int currentPlayer)
 {
-    int k = 0;
+    int k = 0,j,jj;
     int freeSpace[9];
-    for(int j = 0; j < 9; j++) freeSpace[j] = 0;
+    for(j = 0; j < 9; j++) freeSpace[j] = 0;
     
-    for(int j = 0; j < 3; j++)
+    for(j = 0; j < 3; j++)
     {
-        for(int jj = 0; jj < 3; jj++)
+        for(jj = 0; jj < 3; jj++)
         {
             if(ttt[j][jj] == 0)
             {
@@ -224,10 +227,10 @@ struct coordinates easyAlgorithm(int ttt[3][3], int currentPlayer)
 }
 void startGame(int select)
 {
-    int ttt[3][3];
-    for(int j = 0; j < 3; j++)
+    int ttt[3][3],j,jj;
+    for(j = 0; j < 3; j++)
     {
-        for(int jj = 0; jj < 3; jj++)
+        for(jj = 0; jj < 3; jj++)
         {
             ttt[j][jj] = 0;
         }
