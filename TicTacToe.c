@@ -3,22 +3,20 @@
 #include<time.h>
 #include<stdlib.h>
 
-
-
-
-struct coordinates
+typedef struct coordinates
 {
     int x;
     int y;
-};
+} coordinates;
 
-struct coordinates easyAlgorithm(int ttt[3][3], int currentPlayer);
-struct coordinates hardAlgorithm(int ttt[3][3], int currentPlayer, struct coordinates previousCMove, struct coordinates prevoiusHMove);
-struct coordinates playerChoice(int ttt[3][3], int currentPlayer);
-struct coordinates winSpot(int ttt[3][3], struct coordinates previousMove, int currentPlayer);
+coordinates easyAlgorithm(int ttt[3][3], int currentPlayer);
+coordinates hardAlgorithm(int ttt[3][3], int currentPlayer, coordinates previousCMove, coordinates prevoiusHMove);
+coordinates playerChoice(int ttt[3][3], int currentPlayer);
+coordinates winSpot(int ttt[3][3], coordinates previousMove, int currentPlayer);
+void switchPlayer(int* player);
 void showTable(int ttt[3][3]);
 void startGame(int select);
-int winCondition(int ttt[3][3], struct coordinates c, int currentPlayer);
+int winCondition(int ttt[3][3], coordinates c, int currentPlayer);
 
 int main()
 {
@@ -49,7 +47,11 @@ int main()
     }
     return 0;
 }
-
+void switchPlayer(int* player)
+{
+    if (*player == 1) *player = 2;
+    else *player = 1;
+}
 void showTable(int ttt[3][3])
 {
     printf("=============\n");
@@ -69,7 +71,7 @@ void showTable(int ttt[3][3])
     }
     printf("=============\n");
 }
-int winCondition(int ttt[3][3], struct coordinates c, int currentPlayer)
+int winCondition(int ttt[3][3], coordinates c, int currentPlayer)
 {
     int winner = 0;
     int j;
@@ -91,13 +93,13 @@ int winCondition(int ttt[3][3], struct coordinates c, int currentPlayer)
         winner = currentPlayer;
     return winner;
 }
-struct coordinates winSpot(int ttt[3][3], struct coordinates previousMove, int currentPlayer)
+coordinates winSpot(int ttt[3][3], coordinates previousMove, int currentPlayer)
 {
-    struct coordinates winningCoordinates;
+    coordinates winningCoordinates;
     winningCoordinates.x = -1;
     winningCoordinates.y = -1;
 
-    struct coordinates V,H,MD,SD;
+    coordinates V,H,MD,SD;
     short int winV = 0;
     short int winH = 0;
     short int winMD = 0;
@@ -129,9 +131,9 @@ struct coordinates winSpot(int ttt[3][3], struct coordinates previousMove, int c
 
     return winningCoordinates;
 }
-struct coordinates playerChoice(int ttt[3][3], int currentPlayer)
+coordinates playerChoice(int ttt[3][3], int currentPlayer)
 {
-    struct coordinates c;
+    coordinates c;
     while(1)
     {
         int selectField;
@@ -154,13 +156,15 @@ struct coordinates playerChoice(int ttt[3][3], int currentPlayer)
     return c;
 
 }
-struct coordinates hardAlgorithm(int ttt[3][3], int currentPLayer, struct coordinates previousCMove, struct coordinates previousHMove)
+coordinates hardAlgorithm(int ttt[3][3], int currentPlayer, coordinates previousCMove, coordinates previousHMove)
 {
-    struct coordinates c;
+    coordinates c;
 
     bool played = false;
     c.x = -1;
     c.y = -1;
+
+    //play center if it isnt already played
     if(ttt[1][1] == 0)
     {
         c.x = 1;
@@ -171,35 +175,85 @@ struct coordinates hardAlgorithm(int ttt[3][3], int currentPLayer, struct coordi
         //play the winning move
         if(!played)
         {
-            c = winSpot(ttt, previousCMove, currentPLayer);
+            c = winSpot(ttt, previousCMove, currentPlayer);
             if(c.x != -1) played = true;
         }
+        switchPlayer(&currentPlayer);
         //block player from playing the winning move
         if(!played)
-        {
-            if(currentPLayer == 1) currentPLayer = 2;
-            else currentPLayer = 1;
-            
-            c = winSpot(ttt, previousHMove, currentPLayer);
+        {          
+            c = winSpot(ttt, previousHMove, currentPlayer);
             if(c.x != -1) played = true;
-            
-            if(currentPLayer == 1) currentPLayer = 2;
-            else currentPLayer = 1;
         }
         //dont play corner if player has 2 opposite corners
+        if(!played)
+        {
+            if((ttt[0][0] == currentPlayer && ttt[2][2] == currentPlayer) || (ttt[0][2] == currentPlayer && ttt[2][0] == currentPlayer))
+            {
+
+                if(ttt[0][1] == 0)
+                {
+                    c.x = 1;
+                    c.y = 0;
+                }
+                else if(ttt[1][0] == 0)
+                {
+                    c.x = 1;
+                    c.y = 0;
+                }
+                else if(ttt[1][2] == 0)
+                {
+                    c.x = 2;
+                    c.y = 1;
+                }
+                else if(ttt[2][1] == 0)
+                {
+                    c.x = 1;
+                    c.y = 2;
+                }
+                if(c.x != -1) played = true;
+            }
+        }
         //dont play side when player has center
-        
+        if(!played)
+        {
+            if(ttt[1][1] == currentPlayer)
+            {
+                if(ttt[0][0] == 0)
+                {
+                    c.x = 0;
+                    c.y = 0;
+                }
+                else if(ttt[0][2] == 0)
+                {
+                    c.x = 2;
+                    c.y = 0;
+                }
+                else if(ttt[2][0] == 0)
+                {
+                    c.x = 0;
+                    c.y = 2;
+                }
+                else if(ttt[2][2] == 0)
+                {
+                    c.x = 2;
+                    c.y = 2;
+                }
+            }
+            if(c.x != -1) played = true;
+        }
+        switchPlayer(&currentPlayer);
         //irrelevant cases
         if(!played)
         {
-            c = easyAlgorithm(ttt, currentPLayer);
+            c = easyAlgorithm(ttt, currentPlayer);
         }
 
     }
-    ttt[c.y][c.x] = currentPLayer;
+    ttt[c.y][c.x] = currentPlayer;
     return c;
 }
-struct coordinates easyAlgorithm(int ttt[3][3], int currentPlayer)
+coordinates easyAlgorithm(int ttt[3][3], int currentPlayer)
 {
     int k = 0,j,jj;
     int freeSpace[9];
@@ -218,7 +272,7 @@ struct coordinates easyAlgorithm(int ttt[3][3], int currentPlayer)
         }
     }  
     int choice = freeSpace[rand()%k];
-    struct coordinates c;
+    coordinates c;
     c.x = choice%3;
     c.y = choice/3;
     ttt[c.y][c.x] = currentPlayer;
@@ -245,7 +299,7 @@ void startGame(int select)
             if(currentPlayer == 1) printf("Player 1 choose field: ");
             else printf("Player 2 choose field: ");
 
-            struct coordinates c = playerChoice(ttt, currentPlayer);
+            coordinates c = playerChoice(ttt, currentPlayer);
             int winner = winCondition(ttt, c, currentPlayer);
 
             counter++;
@@ -275,8 +329,8 @@ void startGame(int select)
     {
         int computer = 1;
         int difficulty = 1;
-        struct coordinates previousCMove; previousCMove.x = 0; previousCMove.y = 0;
-        struct coordinates previousHMove; previousHMove.x = 0; previousHMove.y = 0;
+        coordinates previousCMove; previousCMove.x = 0; previousCMove.y = 0;
+        coordinates previousHMove; previousHMove.x = 0; previousHMove.y = 0;
 
         while(1)
         {
@@ -303,13 +357,12 @@ void startGame(int select)
         }
         while(1)
         {
-            
             int currentPlayer = counter%2 + 1;
             int winner;
-            struct coordinates c;
+            coordinates c;
             if(currentPlayer == computer)
             {
-               if(difficulty == 1) c =  easyAlgorithm(ttt, currentPlayer);
+               if(difficulty == 1) c = easyAlgorithm(ttt, currentPlayer);
                else c = hardAlgorithm(ttt, currentPlayer, previousCMove, previousHMove);
                printf("Computer choose: x = %d, y = %d\n", c.x, c.y);
                previousCMove = c;
